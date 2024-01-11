@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N O D E</title>
+  <link rel="stylesheet" href="styles/topnav.css">
+  <link rel="stylesheet" href="styles/style.css">
+  <link rel="stylesheet" href="styles/topbtn.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+</head>
+<body id="top">
+
+  <button onclick="topFunction()" id="myBtn" title="Go to top">&uarr;</button>
+
+  <div class="topnav" id="myTopnav">
+    <a href="#top" class="active">Home</a>
+    <a href="#setup">Initial Set Up</a>
+    <a href="#sync">Sync Node</a>
+    <a href="#partkey">Generate Participation Keys</a>
+    <a href="#folks">Folks Finance Consensus</a>
+    <a href="#online">Go Online</a>
+    <a href="#node-update">Update Node</a>
+    <a href="#renew-partkey">Renew PartKeys</a>
+    <a href="#go-offline">Go Offline</a>
+    <a href="#algo-voi">Switch Between ALGO/VOI Nodes</a>
+    <a href="javascript:void(0);" class="icon" onclick="myFunction()">
+      <i class="fa fa-bars"></i>
+    </a>
+  </div>
+  
+  <div class="container initial-setup" id="setup">
+    <h1 id="top">Algorand Node Guide / UBUNTU</h1>
+    <h2>Follow these commands exactly & in order unless otherwise noted.</h2>
+    <h3>Initial Set Up</h3>
+    <p>&#185; Create a folder to hold the install package and files.</p>
+    <pre id="myPreTag">mkdir ~/node<br>cd ~/node</pre>
+    <img src="images/01-nodefolder.png">
+  
+    <p>&#178; Download the updater script</p>
+    <pre id="myPreTag"><br>wget https://raw.githubusercontent.com/algorand/go-algorand/rel/stable/cmd/updater/update.sh<br> </pre>
+    <img src="images/02-dl-updater-script.png">
+
+    <p>&#179; Ensure that your system knows it's an executable file.</p>
+    <pre id="myPreTag">chmod 744 update.sh</pre>
+    
+    <p class="add-tm">&#8308; Run the installer from within your node directory</p>
+    <pre id="myPreTag"><br>./update.sh -i -c stable -p ~/node -d ~/node/data -n</pre>
+    <img src="images/03-run-installer.png">
+
+    <p>&#8309; Set goal default to $ALGORAND_DATA as the data directory</p>
+    <pre id="myPreTag">export ALGORAND_DATA="$HOME/node/data" export PATH="$HOME/node:$PATH"</pre>
+
+    <p class="add-tm">&#8310; Start your node</p>
+    <pre id="myPreTag">goal node start</pre>
+    <img src="images/04-start-node.png">
+
+    <p>&#8311; Install algod as a systemd service</p>
+    <p class="user-change">Change USERNAME to your Ubuntu username</p>
+    <pre id="myPreTag">sudo ./systemd-setup.sh <i>USERNAME</i> group [bindir]</pre>
+    <img src="images/05-systemd-algod-bindr.png">
+
+    <p>&#8312; Install algod as a system-wide service</p>
+    <p class="user-change">Change USERNAME to your Ubuntu username</p>
+    <pre id="myPreTag">sudo ./systemd-setup.sh <i>USERNAME</i> algorand</pre>
+    <img src="images/06-systemd-syswide.png">
+
+    <p>&#8313; Register Changes</p>
+    <pre id="myPreTag">sudo systemctl daemon-reload</pre>
+
+    <p class="add-tm">&#185;&#8304; Start the service</p>
+    <pre id="myPreTag">sudo systemctl start algorand@$(systemd-escape $ALGORAND_DATA)</pre>
+  </div>
+
+  <div class="container fast-catch" id="sync">
+    <h3>Sync Node with Network using Fast Catchup</h3>
+    <p>&#185; Obtain catchup point per network by visiting link below<br>
+    Save the values contained in the link as you will need in the next step
+    </p>
+    <a href="https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/mainnet/latest.catchpoint" target="_blank">MainNet Catchup Point</a>
+    <p>Example Result:<i class="shrink-text"> 35010000#SNDMPTP6DSMAFJQOPV432IEBU4OZQJBU3GGVBDRG2ULWSB3C7L4A</i></p>
+    <pre id="myPreTag">goal node catchup <i>RESULTS-FROM-CATCHUP-POINT</i></pre>
+
+    <p class="add-tm">&#178; Monitor & Wait for node to fully sync</p>
+    <p class="user-note">Node will be fully synced when ALL <i>catchpoint</i> lines disappear<br>& when <i>Sync Time</i> continously resets to 0s (This process can take 1-2 hours)<br>
+    Once your node is caught up, <i>CTRL + C</i> to exit status watch & proceed
+    </p>
+    <pre id="myPreTag">goal node status -w 1000</pre>
+    <img src="images/07-fast-catchup.png">
+
+    <p>Example of fully synced node</p>
+    <img src="images/08-catchup-done.png">
+  </div>
+
+  <div class="container part-keys" id="partkey">
+    <h3>Generate Participation Keys</h3>
+    <p>&#185; Generate Participation Keys For Your Desired Address</p>
+    <p class="user-note">NOTE: You do not NEED to import your wallet</p>
+    <p class="folks-note">NOTE: If using Folks Finance, use your ESCROW ADDRESS</p>
+    <p class="user-note">Instructions: 
+      <ul>
+        <li class="user-note">Set WALLET-ADDRESS to your address or Folks Finance escrow address</li>
+        <li class="user-note">Set roundFirstValid to the current block (Example: 35,045,023)</li>
+        <li class="user-note">Set roundLastValid to the current block + 2,000,000 (Example: 37,045,023)</li>
+        <li class="user-note">When typing out the blocks, do not use commas (Example: 35045023)</li>
+        <li class="user-note">This process can take 5-10 minutes</li>
+      </ul>
+    </p>
+    <pre id="myPreTag"><br>goal -d ~/node/data account addpartkey -a WALLET-ADDRESS --roundFirstValid=CURRENT-BLOCK --roundLastValid=CURRENTBLOCK+2MILLION<br></pre>
+    <img src="images/09-generating-keys.png">
+    <img src="images/10-generated-key.png">
+  </div>
+
+  <div class="container folks-delegate" id="folks">
+    <h3>Folks Finance Consensus</h3>
+    <p class="folks-note add-bm">
+      NOTE: This section is only to be done if you plan on using Folks Finance
+      <br>for governance. If you do not intend on using Folks Finance, proceed
+      <br>to the next section, <i>Go Online</i>.
+    </p>
+    <p>&#185; Display Your Participation Key Info</p>
+    <pre id="myPreTag">goal account partkeyinfo</pre>
+    <img src="images/11-partkeyinfo.png">
+    
+    <p>&#178; Navigate to Folks Finance dApp </p>
+    <p>
+      <ul>
+        <li class="folks-note"><a href="https://app.folks.finance/"
+          target="_blank" class="folks-link">https://app.folks.finance/</a>
+        </li>
+        <li class="folks-note">Algo Liquid Gov > gALGO > Consensus</li>
+        <li class="folks-note">Using the <i>goal account partkeyinfo</i> command<br>Copy/Paste the required information into the Folks Finance Consensus Participation Box</li>
+      </ul>
+    </p>
+    <img src="images/12-ff-consensus.png">
+
+    <p>&#179; Register To Go Online </p>
+    <p>
+      <ul>
+        <li class="folks-note">Click <i>Register</i> to initiate the keyreg transaction </li>
+        <li class="folks-note">You can verify success by viewing the Consensus Participation Box</li>
+        <li class="folks-note">You can also verify participation by heading to the Algorand explorer <span class="allo">Allo'</span><br>
+        Search <span class="allo">Allo'</span> for your Folks Finance escrow address and look for the validator badge under your address</li>
+        <li class="folks-note"><a href="https://allo.info/" target="_blank" class="allo">https://allo.info/</a></li>
+      </ul>
+    </p>
+    <img src="images/13-ff-success.png">
+    <img src="images/14-ff-online.png">
+    <img src="images/15-validator.png">
+  </div>
+
+  <div class="container ff-finished">
+    <p class="user-note">
+      NOTE: You have completed the Algorand node guide. Wait at least 320 rounds(blocks) to validate that the node is participating.
+    </p>
+    <p class="user-note">
+      NOTE: If you are running D13's VOI install alongside this Algorand node on the same machine, GO TO THE <i>Switch Between ALGO/VOI Nodes</i> section for important information.
+    </p>
+    <p class="node-complete">
+      Congratulations, you have succesfully joined Algorand Consensus. You are now an Algorand noderunner.
+    </p>
+  </div>
+
+  <div class="container go-online" id="online">
+    <h3>Go Online (Using Your Own Address)</h3>
+    <p>&#185; Display Your Participation Key Info</p>
+    <pre id="myPreTag">goal account partkeyinfo</pre>
+    <img src="images/17-partkeyinfo.png">
+
+    <p>&#178; Navigate to AlgoTools dApp</p>
+    <p>
+      <ul>
+        <li class="algotools-note"><a href="https://algotools.org/"
+          target="_blank" class="algotools-link">https://algotools.org/</a>
+        </li>
+        <li class="algotools-note">Sign into Wallet > Compose Transaction > Transaction Type == Key Registration</li>
+        <li class="algotools-note">Using the <i>goal account partkeyinfo</i> command<br>Copy/Paste the required information into the AlgoTools Key Registration Box</li>
+      </ul>
+    </p>
+    <img src="images/18-algotools-keyreg.png">
+
+    <p>&#179; Register To Go Online </p>
+    <p>
+      <ul>
+        <li class="algotools-note">Click <i>Send</i> to initiate the keyreg transaction </li>
+        <li class="algotools-note">You can verify success by viewing the resulting Key Registration Box</li>
+        <li class="algotools-note">You can also verify participation by heading to the Algorand explorer <span class="allo">Allo'</span><br>
+        Search <span class="allo">Allo'</span> for your wallet address and look for the validator badge under your address</li>
+        <li class="folks-note"><a href="https://allo.info/" target="_blank" class="allo">https://allo.info/</a></li>
+      </ul>
+      <img src="images/19-algotools-online.png">
+      <img src="images/20-validator.png">
+    </p>
+  </div>
+
+  <div class="container node-finished">
+    <p class="user-note">
+      NOTE: You have completed the Algorand node guide. Wait at least 320 rounds(blocks) to validate that the node is participating.
+    </p>
+    <p class="user-note">
+      NOTE: If you are running D13's VOI install alongside this Algorand node on the same machine, GO TO THE <i>Switch Between ALGO/VOI Nodes</i> section for important information.
+    </p>
+    <p class="node-complete">
+      Congratulations, you have succesfully joined Algorand Consensus. You are now an Algorand noderunner.
+    </p>
+  </div>
+
+  <div class="container update-node" id="node-update">
+    <h3>Update Node</h3>
+    <p>&#185; Display Current Build</p>
+    <pre id="myPreTag">goal version -v</pre>
+    <img src="images/21-node-version.png">
+    <p>&#178; Run The Update Command</p>
+    <p class="user-note">NOTE: My node is already using the latest build.<br>When you run this command, if an update exists,<br> the update will be applied.</p>
+    <pre id="myPreTag">cd<br>cd node<br>./update.sh -d ~/node/data</pre>
+    <img src="images/22-node-update.png">
+    <p>&#179; Verify Update/Display Current Build</p>
+    <pre id="myPreTag">goal version -v</pre>
+    <img src="images/21-node-version.png">
+  </div>
+
+  <div class="container renew-partkeys" id="renew-partkey">
+    <h3>Renew Participation Keys</h3>
+    <p>&#185; Display Current Participation Key Info</p>
+    <pre id="myPreTag">goal account partkeyinfo</pre>
+    <img src="images/17-partkeyinfo.png">
+    <p>
+      &#178; Using The Information From <i>goal account partkeyinfo</i>, Create A New Participation Key
+      <br>that is less than the last voting round 
+    </p>
+    <p>
+      <ul>
+        <li class="user-note stress">You can Renew a Participation Key at anytime before it expires</li>
+        <li class="user-note stress">Make sure to renew at least a few thousand blocks before your last round
+          <br>This will ensure that your node will not risk having an account marked as online that is not participating.
+        </li>
+      </ul>
+    </p>
+
+    <h3>Generate New Participation Keys</h3>
+    <p>&#179; Generate Participation Keys For Your Desired Address</p>
+    <p class="user-note">Instructions: 
+      <ul>
+        <li class="user-note">Set WALLET-ADDRESS to your address or Folks Finance escrow address</li>
+        <li class="user-note">Set roundFirstValid to the current block (Example: 35,099,076)</li>
+        <li class="user-note">Set roundLastValid to the current block + 2,000,000 (Example: 37,099,076)</li>
+        <li class="user-note">When typing out the blocks, do not use commas (Example: 35099076)</li>
+        <li class="user-note">This process can take 5-10 minutes</li>
+      </ul>
+    </p>
+    <pre id="myPreTag"><br>goal -d ~/node/data account addpartkey -a WALLET-ADDRESS --roundFirstValid=CURRENT-BLOCK --roundLastValid=CURRENTBLOCK+2MILLION<br></pre>
+    <img src="images/27-renew-generate.png">
+    <img src="images/28-success-renew.png">
+
+    <h3>Sign The Updated Keyreg Transaction</h3>
+    <p>&#179; Use Folks Finance or AlgoTools to Sign Updated Keyreg</p>
+    <p class="user-note">Instructions: 
+      <ul>
+        <li class="user-note">Using the <i>goal account partkeyinfo</i> command from earlier in this guide</li>
+        <li class="user-note">Copy paste the relevant information into Folks Finance or AlgoTools.
+          <br>Refer to the "Folks Finance Consensus" or "Go Online" sections for instructions if you need them again.</li>
+    </p>
+  </div>
+
+
+  <div class="container node-offline" id="go-offline">
+    <h3>Go Offline</h3>
+    <p>&#185; Go Offline with Folks Finance Consensus</p>
+    <p>
+      <ul>
+        <li class="folks-note"><a href="https://app.folks.finance/"
+          target="_blank" class="folks-link">https://app.folks.finance/</a>
+        </li>
+        <li class="folks-note">Algo Liquid Gov > gALGO > Consensus</li>
+        <li class="folks-note">Click <i>Register Offline </i>to go offline</li>
+      </ul>
+    </p>
+    <img src="images/29-ff-offline.png">
+
+    <p>&#185; Go Offline using AlgoTools</p>
+    <p>
+      <ul>
+        <li class="algotools-note"><a href="https://algotools.org/"
+          target="_blank" class="algotools-link">https://algotools.org/</a>
+        </li>
+        <li class="algotools-note">Sign into Wallet > Compose Transaction > Transaction Type == Key Registration</li>
+        <li class="algotools-note">Click <i>GO OFFLINE</i></li>
+      </ul>
+    </p>
+    <img src="images/30-algotools-offline.png">
+    <img src="images/31-algotools-confirm-offline.png">
+  </div>
+  
+  <div class="container algo-voi" id="algo-voi">
+    <h3>Switch Between ALGO/VOI Nodes</h3>
+    <li class="user-note stress">These instructions are only applicable if you used D13's VOI guide & this ALGORAND guide.</li>
+    <p class="user-change">An easy way to figure out what network your goal command defaults to:<br>Completely close CLI > Open CLI > goal node status</p>
+    <p class="user-note">
+      NOTE: After using<i> goal node status</i>, look at the Genesis ID in the output.
+      <br>If it displays VOI, you will create an alias for the Algorand side.
+      <br>If it displays ALGO, you will create an alias for the VOI side.
+    </p>
+
+    <p class="add-tm">&#185; Create an alias using vim</p>
+    <pre id="myPreTag">vim ~/.bashrc</pre>
+    <p>
+      <ul>
+        <li class="user-note stress">After using the vim command, scroll to the end of the file.</li>
+        <li class="user-note stress">If <i>goal node status</i> defaulted to the VOI node, you will add the file path to the Algorand node.</li>
+        <li class="user-note stress">If <i>goal node status</i> defaulted to the Algorand node, you will add the file path to the VOI node.</li>
+        <li class="user-note stress">Hit I for insert, this will allow you to edit the file</li>
+        <li class="user-note stress">After you have entered the alias like the example below, hit ESC to get to normal mode</li>
+        <li class="user-note stress">Type :wq (This will escape & save the changes)</li>
+      </ul>
+    </p>
+
+    <p class="add-tm">&#178; Copy the alias below and insert using vim</p>
+    <ul>
+      <li class="user-note stress">goal -d ~/node/data = ALGORAND FILE PATH</li>
+      <li class="user-note stress">goal -d /var/lib/algorand = VOI FILE PATH</li>
+    </ul>
+    <pre id="myPreTag">alias goal2='goal -d ~/node/data'</pre>
+    <p class="user-change">OR</p>
+    <pre id="myPreTag">alias goal2='goal -d /var/lib/algorand'</pre>
+    <img src="images/23-alias-insert.png">
+    <img src="images/24-alias-normal.png">
+    <img src="images/25-alias-wq.png">
+    <p class="add-tm">&#179; Install the .bashrc</p>
+    <pre id="myPreTag">source ~/.bashrc</pre>
+    <p class="user-change add-tm">You can now use goal2 in order to utilize goal commands from your secondary node. See below:</p>
+    <img src="images/26-goal-goal2.png">
+  </div>
+
+  <script src="scripts/topnav.js"></script>
+  <script src="scripts/topbtn.js"></script>
+  <script src="scripts/script.js"></script>
+</body>
+</html>
