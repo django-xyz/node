@@ -55,22 +55,6 @@
     <p class="add-tm">&#8310; Start your node</p>
     <pre id="myPreTag">goal node start</pre>
     <img src="images/04-start-node.png">
-
-    <p>&#8311; Install algod as a systemd service</p>
-    <p class="user-change">Change USERNAME to your Ubuntu username</p>
-    <pre id="myPreTag">sudo ./systemd-setup.sh <i>USERNAME</i> group [bindir]</pre>
-    <img src="images/05-systemd-algod-bindr.png">
-
-    <p>&#8312; Install algod as a system-wide service</p>
-    <p class="user-change">Change USERNAME to your Ubuntu username</p>
-    <pre id="myPreTag">sudo ./systemd-setup.sh <i>USERNAME</i> algorand</pre>
-    <img src="images/06-systemd-syswide.png">
-
-    <p>&#8313; Register Changes</p>
-    <pre id="myPreTag">sudo systemctl daemon-reload</pre>
-
-    <p class="add-tm">&#185;&#8304; Start the service</p>
-    <pre id="myPreTag">sudo systemctl start algorand@$(systemd-escape $ALGORAND_DATA)</pre>
   </div>
 
   <div class="container fast-catch" id="sync">
